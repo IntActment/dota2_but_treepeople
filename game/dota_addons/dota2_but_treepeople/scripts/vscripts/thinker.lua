@@ -26,9 +26,54 @@ function Thinker:LateGame()
 	return nil -- does not repeat
 end
 
+LinkLuaModifier( "treepeople_brain", "modifiers/treepeople_brain", LUA_MODIFIER_MOTION_NONE )
+LinkLuaModifier( "treepeople_spawner", "modifiers/treepeople_spawner", LUA_MODIFIER_MOTION_NONE )
+
+Treepeople_data =
+{
+	count = 0,
+	spawner_count = 0,
+	limit = 120,
+	spawner_limit = 16,
+}
+
+local treepeople_data = Treepeople_data
+
 function Thinker:VeryVeryOften()
-	-- print("every 10 seconds")
-	return 10
+	-- print("every 4.5 seconds")
+	
+	if treepeople_data.spawner_count < treepeople_data.spawner_limit then
+	
+		local pos = Vector( RandomFloat( GetWorldMinX(), GetWorldMaxX() ), RandomFloat( GetWorldMinY(), GetWorldMaxY() ), 0 )
+		
+		local hTree = nil
+		local tree_table = GridNav:GetAllTreesAroundPoint( pos, 5000, false )
+		local list = {}
+		for k, v in pairs(tree_table) do
+			if ( v.IsStanding == nil ) or v:IsStanding() then
+				list[#list + 1] = v
+			end
+		end
+		
+		if #list > 0 then
+			hTree = list[ RandomInt( 1, #list ) ]
+		end
+		
+		if hTree == nil then
+			return 1.5
+		end
+		
+		local hTreemanRax = CreateUnitByName("npc_dota_tree_rax", hTree:GetAbsOrigin() + RandomVector( 20.0 ), false, nil, nil, DOTA_TEAM_CUSTOM_1) -- DOTA_TEAM_CUSTOM_1
+		if hTreemanRax ~= nil then
+			hTreemanRax:AddNewModifier( nil, nil, "treepeople_spawner", {} )
+			hTreemanRax:AddNewModifier( hTreemanRax, nil, "modifier_kill", { duration = 5.0 * 60 } )
+		end
+	
+	else
+		--print( "limit has reached" )
+	end
+	
+	return 10.5
 end
 
 function Thinker:VeryOften()
